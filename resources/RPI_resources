@@ -1,0 +1,14 @@
+Things needed to dowload
+1. Git: Git-2.47.1-64-bit.exe
+2. Visual Studio Code
+
+Things needed to dowload(optional)
+1. VNC: tigervnc64-1.14.1.exe
+
+ways to clone the github into vscode:
+git clone https://github.com/kskhor/AI_ChessArm.git
+
+ways to push to github:
+git add .
+git commit -m "Initial project setup"
+git push origin main
