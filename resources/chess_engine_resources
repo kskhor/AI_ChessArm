@@ -1,6 +1,5 @@
 Things needed to dowload
-1. python chess
+1. python-chess: a chess library for Python https://python-chess.readthedocs.io/en/latest/#
 2. stockfish chess engine 
 
 Things needed to dowload(optional)
-1. python typing extension: typing_extensions-4.12.2.tar.gz

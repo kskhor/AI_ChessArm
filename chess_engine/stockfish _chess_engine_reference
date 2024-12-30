@@ -1,0 +1,76 @@
+"""
+This program allows a human player to play a game of chess against the Stockfish AI engine.
+The human player plays as White and enters moves in algebraic notation (e.g., e2e4).
+The Stockfish engine calculates and plays the moves for the AI opponent.
+
+Requirements:
+- python-chess library: https://python-chess.readthedocs.io/en/latest/
+- Stockfish chess engine: https://stockfishchess.org/download/
+
+Instructions:
+1. Set the path to the Stockfish executable in the `engine_path` variable.
+2. Run the program.
+3. Enter your moves in the console when prompted.
+4. The game continues until checkmate, stalemate, or draw.
+
+The program outputs the current state of the chessboard after each move and announces the game result at the end.
+"""
+
+import chess
+import chess.engine
+
+# Set up the path to the Stockfish executable
+engine_path = r"C:\Users\Ang\Downloads\stockfish-windows-x86-64-avx2\stockfish\stockfish-windows-x86-64-avx2.exe"
+
+
+# Initialize the chessboard
+board = chess.Board()
+
+# Start the Stockfish engine
+with chess.engine.SimpleEngine.popen_uci(engine_path) as engine:
+    print("Welcome to Human vs AI Chess!")
+    print("You are playing as White. Enter your moves in algebraic notation (e.g., e2e4).")
+    print(board)
+
+    # Game loop
+    while not board.is_game_over():
+        # Human move
+        try:
+            human_move = input("Your move: ").strip()
+            move = chess.Move.from_uci(human_move)
+            if move in board.legal_moves:
+                board.push(move)
+            else:
+                print("Invalid move. Try again.")
+                continue
+        except ValueError:
+            print("Invalid input format. Use standard notation (e.g., e2e4).")
+            continue
+
+        print("\nYour move played:")
+        print(board)
+
+        # Check if the game is over after the human move
+        if board.is_game_over():
+            break
+
+        # AI move
+        print("\nStockfish is thinking...")
+        ai_move = engine.play(board, chess.engine.Limit(time=1.0)).move
+        board.push(ai_move)
+        print("\nStockfish's move:", ai_move)
+        print(board)
+
+    # Game over
+    print("\nGame Over!")
+    print("Result:", board.result())  # Outputs results in formats like 1-0, 0-1, or 1/2-1/2
+    if board.is_checkmate():
+        print("Checkmate!")
+    elif board.is_stalemate():
+        print("Stalemate!")
+    elif board.is_insufficient_material():
+        print("Draw due to insufficient material.")
+    elif board.can_claim_threefold_repetition():
+        print("Draw by threefold repetition.")
+    elif board.is_seventyfive_moves():
+        print("Draw by the seventy-five-move rule.")
