@@ -20,8 +20,7 @@ import chess
 import chess.engine
 
 # Set up the path to the Stockfish executable
-engine_path = r"C:\Users\Ang\Downloads\stockfish-windows-x86-64-avx2\stockfish\stockfish-windows-x86-64-avx2.exe"
-
+engine_path = "f/usr/games/stockfish"
 
 # Initialize the chessboard
 board = chess.Board()
