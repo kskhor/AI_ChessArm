@@ -1,5 +1,4 @@
 """
-testing
 This program allows a human player to play a game of chess against the Stockfish AI engine.
 The human player plays as White and enters moves in algebraic notation (e.g., e2e4).
 The Stockfish engine calculates and plays the moves for the AI opponent.
