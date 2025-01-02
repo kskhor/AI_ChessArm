@@ -1,0 +1,141 @@
+import cv2
+import numpy as np
+
+# Define the chessboard squares in algebraic notation
+chessboard_squares = [
+    ["a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"],
+    ["a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"],
+    ["a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6"],
+    ["a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5"],
+    ["a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4"],
+    ["a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3"],
+    ["a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2"],
+    ["a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"],
+]
+
+# Initialize camera
+camera = cv2.VideoCapture(0)
+if not camera.isOpened():
+    print("Error: Camera could not be opened.")
+    exit()
+
+def capture_image(filename):
+    """Capture an image from the camera and save it."""
+    ret, frame = camera.read()
+    if not ret:
+        print("Error: Could not capture image.")
+        return False, None
+    cv2.imwrite(filename, frame)
+    print(f"Image saved as {filename}.")
+    return True, frame
+
+def detect_chessboard(image):
+    """Detect the chessboard's position and dimensions."""
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    # Apply adaptive thresholding
+    thresh = cv2.adaptiveThreshold(
+        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2
+    )
+
+    # Find contours (detect the outer boundary of the chessboard)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+    for contour in contours:
+        # Approximate the contour to check if it's a quadrilateral
+        epsilon = 0.02 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+
+        if len(approx) == 4:  # If it's a quadrilateral, assume it's the chessboard
+            x, y, w, h = cv2.boundingRect(approx)
+            return x, y, w, h
+
+    print("Error: Chessboard could not be detected.")
+    return None
+
+def detect_move(before_image, after_image):
+    """Detect the move made on the chessboard."""
+    before = cv2.imread(before_image)
+    after = cv2.imread(after_image)
+
+    # Detect the chessboard in both images
+    board_before = detect_chessboard(before)
+    board_after = detect_chessboard(after)
+
+    if not board_before or not board_after:
+        print("Error: Could not detect chessboard in one or both images.")
+        return None
+
+    board_x, board_y, board_width, board_height = board_before
+
+    # Convert images to grayscale
+    before_gray = cv2.cvtColor(before, cv2.COLOR_BGR2GRAY)
+    after_gray = cv2.cvtColor(after, cv2.COLOR_BGR2GRAY)
+
+    # Compute absolute difference
+    diff = cv2.absdiff(before_gray, after_gray)
+
+    # Threshold the difference
+    _, thresh = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)
+
+    # Find contours
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:2]  # Top 2 contours
+
+    square_width = board_width // 8
+    square_height = board_height // 8
+
+    moved_squares = []
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        center_x = x + w // 2
+        center_y = y + h // 2
+
+        # Calculate grid position
+        grid_x = (center_x - board_x) // square_width
+        grid_y = (center_y - board_y) // square_height
+
+        if 0 <= grid_x < 8 and 0 <= grid_y < 8:
+            moved_squares.append(chessboard_squares[grid_y][grid_x])
+
+    # Return the detected move
+    if len(moved_squares) == 2:
+        return f"{moved_squares[0]}{moved_squares[1]}"
+    else:
+        print("Error: Could not detect a valid move.")
+        return None
+
+# Main program loop
+try:
+    print("AI Chess Arm Robot Program with Chessboard Detection")
+
+    while True:
+        # Step 1: Capture AI move image
+        input("Press Enter to capture AI move image...")
+        success, ai_image = capture_image("ai_move.jpg")
+        if not success:
+            continue
+
+        # Step 2: Human makes a move
+
+        # Step 3: Capture opponent move image
+        input("Press Enter to capture opponent move image...")
+        success, opponent_image = capture_image("opponent_move.jpg")
+        if not success:
+            continue
+
+        # Step 4: Detect the move
+        print("Detecting move...")
+        move = detect_move("ai_move.jpg", "opponent_move.jpg")
+        if move:
+            print(f"Detected move: {move}")
+
+        # Add logic here to pass the move to the robotic arm
+
+except KeyboardInterrupt:
+    print("\nProgram terminated by user.")
+
+finally:
+    camera.release()
+    cv2.destroyAllWindows()

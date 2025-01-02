@@ -1,0 +1,31 @@
+import cv2
+
+# Open the camera (0 = default camera)
+cap = cv2.VideoCapture(0)
+
+if not cap.isOpened():
+    print("Error: Could not open the camera.")
+    exit()
+
+print("Press 'q' to quit.")
+
+while True:
+    # Capture frame-by-frame
+    ret, frame = cap.read()
+    if not ret:
+        print("Error: Could not read frame.")
+        break
+
+    # Display the frame
+    cv2.imshow('Chessboard', frame)
+
+    # Save the frame when 's' is pressed
+    key = cv2.waitKey(1)
+    if key == ord('s'):
+        cv2.imwrite('chessboard.jpg', frame)
+        print("Image saved as 'chessboard.jpg'.")
+    elif key == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()

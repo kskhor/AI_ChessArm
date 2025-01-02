@@ -1,0 +1,68 @@
+import cv2
+import numpy as np
+
+# Define the chessboard squares in algebraic notation
+chessboard_squares = [
+    ["a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"],
+    ["a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"],
+    ["a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6"],
+    ["a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5"],
+    ["a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4"],
+    ["a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3"],
+    ["a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2"],
+    ["a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"],
+]
+
+# Load the 'before' and 'after' images
+before = cv2.imread("before.jpg", cv2.IMREAD_GRAYSCALE)
+after = cv2.imread("after.jpg", cv2.IMREAD_GRAYSCALE)
+
+# Compute the absolute difference between the images
+diff = cv2.absdiff(before, after)
+
+# Threshold the difference to highlight the moved pieces
+_, thresh = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)
+
+# Find contours of the moved pieces
+contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Sort contours to identify the most relevant ones (moved pieces)
+contours = sorted(contours, key=cv2.contourArea, reverse=True)[:2]  # Top 2 contours for source and destination
+
+# Define the board dimensions (manually set or calculate from detection)
+board_x, board_y, board_width, board_height = 100, 100, 400, 400  # Adjust based on your chessboard image
+
+# Divide the board into an 8x8 grid
+square_width = board_width // 8
+square_height = board_height // 8
+
+# Map contour centers to chess squares
+moved_squares = []
+for contour in contours:
+    x, y, w, h = cv2.boundingRect(contour)
+    center_x = x + w // 2
+    center_y = y + h // 2
+
+    # Calculate the grid position
+    grid_x = (center_x - board_x) // square_width
+    grid_y = (center_y - board_y) // square_height
+
+    # Ensure indices are within bounds
+    if 0 <= grid_x < 8 and 0 <= grid_y < 8:
+        moved_squares.append(chessboard_squares[grid_y][grid_x])
+
+# Check if two squares are detected (source and destination)
+if len(moved_squares) == 2:
+    move = f"{moved_squares[0]}{moved_squares[1]}"
+    print(f"Detected move: {move}")
+else:
+    print("Error: Could not detect a valid move.")
+
+# Display the contours on the after image for visualization
+for contour in contours:
+    x, y, w, h = cv2.boundingRect(contour)
+    cv2.rectangle(after, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+cv2.imshow("Moved Pieces", after)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
