@@ -12,3 +12,6 @@ ways to push to github:
 git add .
 git commit -m "Initial project setup"
 git push origin main
+
+ways to go into AI_ChessArm in terminal:
+cd 2025kejizhan/AI_ChessArm
